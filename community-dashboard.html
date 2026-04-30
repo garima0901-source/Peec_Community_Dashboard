@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Community ROI Dashboard — Garima</title>
+<meta name="description" content="Community Manager performance dashboard tracking events, ambassadors, pipeline, and community health in real time."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,300&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f5f0;--surface:#ffffff;--card:#ffffff;
+  --ink:#0e0d0b;--ink2:#3d3b36;--ink3:#8a877f;
+  --border:#e4e0d8;--border2:#ccc9c0;
+  --green:#1a7f5a;--green-bg:#edf7f2;
+  --amber:#b85c00;--amber-bg:#fef3e2;
+  --red:#b83232;--red-bg:#fdeaea;
+  --blue:#1a4f9f;--blue-bg:#eaf0fc;
+  --accent:#2d5be3;--accent-light:#eef2fd;
+  --mono:'DM Mono',monospace;--serif:'Fraunces',serif;--sans:'Instrument Sans',sans-serif;
+  --r:10px;--r-sm:6px;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px}
+
+/* layout */
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+.sidebar{background:var(--ink);color:#f0ede8;position:sticky;top:0;height:100vh;overflow-y:auto;padding:0;display:flex;flex-direction:column}
+.main{overflow:hidden;display:flex;flex-direction:column}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:.85rem 1.75rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;position:sticky;top:0;z-index:10}
+.content{padding:1.75rem;display:flex;flex-direction:column;gap:1.5rem;flex:1}
+
+/* sidebar */
+.sb-brand{padding:1.4rem 1.2rem 1rem;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brand-name{font-family:var(--serif);font-size:1.1rem;font-weight:500;letter-spacing:-.01em;color:#f0ede8}
+.sb-brand-sub{font-family:var(--mono);font-size:10px;color:rgba(240,237,232,.4);letter-spacing:.08em;margin-top:3px}
+.sb-section{padding:.5rem 0}
+.sb-label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:rgba(240,237,232,.3);padding:.6rem 1.2rem .3rem;text-transform:uppercase}
+.sb-item{display:flex;align-items:center;gap:.6rem;padding:.55rem 1.2rem;cursor:pointer;transition:background .15s;border-radius:0;font-size:.82rem;color:rgba(240,237,232,.65);font-family:var(--sans)}
+.sb-item:hover,.sb-item.active{background:rgba(255,255,255,.07);color:#f0ede8}
+.sb-item.active{border-left:2px solid var(--accent);padding-left:calc(1.2rem - 2px)}
+.sb-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sb-footer{margin-top:auto;padding:1rem 1.2rem;border-top:1px solid rgba(255,255,255,.08)}
+.sb-built{font-family:var(--mono);font-size:9px;color:rgba(240,237,232,.3);letter-spacing:.06em;line-height:1.6}
+.sb-built a{color:rgba(240,237,232,.5);text-decoration:none}
+
+/* topbar */
+.tb-title{font-family:var(--serif);font-size:1.15rem;font-weight:500;color:var(--ink)}
+.tb-right{display:flex;align-items:center;gap:.75rem}
+.live-badge{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--green);background:var(--green-bg);border-radius:99px;padding:4px 10px;letter-spacing:.06em}
+.live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1.6s ease infinite}
+.tb-time{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.add-btn{background:var(--accent);color:#fff;border:none;border-radius:var(--r-sm);padding:.45rem .9rem;font-family:var(--sans);font-size:.8rem;font-weight:500;cursor:pointer;transition:opacity .2s}
+.add-btn:hover{opacity:.85}
+
+/* section headers */
+.sec-row{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+.sec-title{font-family:var(--serif);font-size:1.35rem;font-weight:500;color:var(--ink);letter-spacing:-.02em}
+.sec-sub{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:.06em}
+
+/* KPI strip */
+.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:.9rem}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem 1.2rem}
+.kpi-label{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink3);text-transform:uppercase;margin-bottom:.5rem}
+.kpi-val{font-family:var(--serif);font-size:2rem;font-weight:500;letter-spacing:-.03em;color:var(--ink);line-height:1}
+.kpi-delta{font-family:var(--mono);font-size:10px;margin-top:.35rem}
+.up{color:var(--green)}.down{color:var(--red)}.flat{color:var(--ink3)}
+
+/* two col */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.9rem}
+
+/* card */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.panel-head{padding:.85rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-family:var(--sans);font-size:.82rem;font-weight:600;color:var(--ink2)}
+.panel-body{padding:1.1rem 1.2rem}
+.panel-badge{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:99px;letter-spacing:.06em}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+.badge-blue{background:var(--blue-bg);color:var(--blue)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+
+/* chart canvas */
+.chart-wrap{position:relative;width:100%}
+.chart-wrap canvas{display:block}
+
+/* event table */
+.evt-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.evt-table th{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--ink3);text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--border);text-transform:uppercase;background:var(--bg)}
+.evt-table td{padding:.65rem .75rem;border-bottom:1px solid var(--border);color:var(--ink2);vertical-align:middle}
+.evt-table tr:last-child td{border-bottom:none}
+.evt-table tr:hover td{background:#faf9f6}
+.evt-type{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px}
+.tag-dinner{background:#f0eaff;color:#5b21b6}
+.tag-conf{background:#e0f2fe;color:#0369a1}
+.tag-activation{background:#fef3e2;color:#b45309}
+.tag-online{background:#dcfce7;color:#15803d}
+.conv-bar-wrap{width:80px;height:6px;background:var(--border);border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:5px}
+.conv-bar{height:100%;border-radius:99px;background:var(--accent)}
+.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+
+/* ambassador list */
+.amb-list{display:flex;flex-direction:column;gap:.6rem}
+.amb-row{display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;border-radius:var(--r-sm);border:1px solid var(--border);transition:border-color .2s}
+.amb-row:hover{border-color:var(--border2)}
+.amb-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:.85rem;font-weight:500;flex-shrink:0}
+.amb-name{font-size:.82rem;font-weight:600;color:var(--ink)}
+.amb-role{font-family:var(--mono);font-size:9px;color:var(--ink3);margin-top:1px}
+.amb-stat{margin-left:auto;text-align:right}
+.amb-reach{font-family:var(--serif);font-size:1rem;font-weight:500;color:var(--ink)}
+.amb-label{font-family:var(--mono);font-size:9px;color:var(--ink3)}
+.tier-badge{font-family:var(--mono);font-size:8px;padding:2px 6px;border-radius:3px;margin-left:.5rem}
+.tier-gold{background:#fef9c3;color:#a16207}
+.tier-silver{background:#f1f5f9;color:#475569}
+.tier-bronze{background:#fef3e2;color:#92400e}
+
+/* pipeline funnel */
+.funnel{display:flex;flex-direction:column;gap:.5rem}
+.funnel-row{display:flex;align-items:center;gap:.75rem}
+.funnel-label{font-size:.78rem;color:var(--ink2);width:110px;flex-shrink:0}
+.funnel-bar-wrap{flex:1;height:22px;background:var(--bg);border-radius:3px;overflow:hidden;position:relative}
+.funnel-bar{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:8px;font-family:var(--mono);font-size:10px;color:#fff;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.funnel-val{font-family:var(--mono);font-size:.78rem;color:var(--ink2);width:60px;text-align:right;flex-shrink:0}
+
+/* health ring grid */
+.health-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+.health-item{display:flex;flex-direction:column;align-items:center;gap:.4rem;padding:.85rem .5rem}
+.ring-svg{overflow:visible}
+.health-label{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--ink3);text-align:center;text-transform:uppercase}
+
+/* activity feed */
+.feed{display:flex;flex-direction:column}
+.feed-item{display:flex;gap:.85rem;padding:.7rem 0;border-bottom:1px solid var(--border);animation:slideIn .3s ease both}
+.feed-item:last-child{border-bottom:none}
+.feed-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px}
+.feed-body{flex:1}
+.feed-text{font-size:.8rem;color:var(--ink2);line-height:1.45}
+.feed-text strong{color:var(--ink);font-weight:600}
+.feed-time{font-family:var(--mono);font-size:9px;color:var(--ink3);margin-top:2px}
+
+/* upcoming events */
+.upcoming-list{display:flex;flex-direction:column;gap:.55rem}
+.upcoming-item{display:flex;gap:.85rem;align-items:flex-start;padding:.7rem .85rem;border-radius:var(--r-sm);border:1px solid var(--border)}
+.upcoming-date{min-width:42px;text-align:center;background:var(--ink);color:#f0ede8;border-radius:5px;padding:.35rem .4rem}
+.upcoming-day{font-family:var(--serif);font-size:1.2rem;font-weight:500;line-height:1}
+.upcoming-mon{font-family:var(--mono);font-size:8px;letter-spacing:.1em;opacity:.6}
+.upcoming-body{flex:1}
+.upcoming-name{font-size:.82rem;font-weight:600;color:var(--ink)}
+.upcoming-meta{font-family:var(--mono);font-size:9px;color:var(--ink3);margin-top:2px}
+.upcoming-kpi{text-align:right;flex-shrink:0}
+.upcoming-target{font-family:var(--serif);font-size:.95rem;font-weight:500;color:var(--ink)}
+.upcoming-tlab{font-family:var(--mono);font-size:9px;color:var(--ink3)}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(14,13,11,.5);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:12px;padding:1.75rem;width:420px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2);transform:translateY(16px);transition:transform .2s}
+.modal-bg.open .modal{transform:translateY(0)}
+.modal-title{font-family:var(--serif);font-size:1.2rem;font-weight:500;margin-bottom:1.2rem}
+.field{margin-bottom:.9rem}
+.field label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink3);margin-bottom:.35rem;text-transform:uppercase}
+.field input,.field select{width:100%;padding:.55rem .75rem;border:1px solid var(--border2);border-radius:var(--r-sm);font-family:var(--sans);font-size:.88rem;color:var(--ink);background:var(--bg);outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:.6rem;justify-content:flex-end;margin-top:1.2rem}
+.btn-cancel{background:transparent;border:1px solid var(--border2);border-radius:var(--r-sm);padding:.5rem 1rem;font-family:var(--sans);font-size:.85rem;color:var(--ink2);cursor:pointer}
+.btn-save{background:var(--accent);border:none;border-radius:var(--r-sm);padding:.5rem 1.1rem;font-family:var(--sans);font-size:.85rem;font-weight:500;color:#fff;cursor:pointer}
+
+/* tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.1rem}
+.tab{padding:.6rem 1rem;font-size:.8rem;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;font-family:var(--sans)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+/* tooltip */
+.tooltip-wrap{position:relative;display:inline-block}
+.tooltip{position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:var(--ink);color:#f0ede8;font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:4px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:20}
+.tooltip-wrap:hover .tooltip{opacity:1}
+
+/* animations */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.fade-in{animation:fadeIn .4s ease both}
+
+/* responsive */
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .two-col,.three-col{grid-template-columns:1fr}
+}
+@media(max-width:560px){.kpi-strip{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-brand-name">Community OS</div>
+    <div class="sb-brand-sub">BY GARIMA · PEEC AI</div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">Overview</div>
+    <div class="sb-item active" onclick="setView('overview',this)"><span class="sb-dot" style="background:#2d5be3"></span>Dashboard</div>
+    <div class="sb-item" onclick="setView('events',this)"><span class="sb-dot" style="background:#1a7f5a"></span>Events</div>
+    <div class="sb-item" onclick="setView('ambassadors',this)"><span class="sb-dot" style="background:#b85c00"></span>Ambassadors</div>
+    <div class="sb-item" onclick="setView('pipeline',this)"><span class="sb-dot" style="background:#1a4f9f"></span>Pipeline</div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">Analytics</div>
+    <div class="sb-item" onclick="setView('health',this)"><span class="sb-dot" style="background:#5b21b6"></span>Community Health</div>
+    <div class="sb-item" onclick="setView('activity',this)"><span class="sb-dot" style="background:#b83232"></span>Activity Feed</div>
+  </div>
+  <div class="sb-footer">
+    <div class="sb-built">Built by <a href="#">Garima</a><br>Community Manager Framework v1.0</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-title" id="page-title">Overview</div>
+    <div class="tb-right">
+      <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+      <div class="tb-time" id="tb-clock"></div>
+      <button class="add-btn" onclick="openModal()">+ Log Event</button>
+    </div>
+  </div>
+
+  <div class="content" id="content-area">
+    <!-- rendered by JS -->
+  </div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-title">Log New Event</div>
+    <div class="field"><label>Event Name</label><input type="text" id="m-name" placeholder="e.g. Founder Dinner Berlin"/></div>
+    <div class="field"><label>Type</label>
+      <select id="m-type">
+        <option value="dinner">Partner Dinner</option>
+        <option value="conf">Conference</option>
+        <option value="activation">Brand Activation</option>
+        <option value="online">Online Event</option>
+      </select>
+    </div>
+    <div class="field"><label>Attendees</label><input type="number" id="m-att" placeholder="e.g. 40"/></div>
+    <div class="field"><label>Location</label><input type="text" id="m-loc" placeholder="e.g. Berlin, DE"/></div>
+    <div class="field"><label>Budget (€)</label><input type="number" id="m-budget" placeholder="e.g. 3500"/></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEvent()">Save Event</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+/* ═══════════════════════════════════════════
+   DATA LAYER
+═══════════════════════════════════════════ */
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const now = new Date()
+
+let events = [
+  {id:1,name:'AI Search Founder Dinner',type:'dinner',date:'2026-03-14',location:'Berlin, DE',attendees:38,conversions:12,budget:3200,revenue:41000,status:'complete',nps:87},
+  {id:2,name:'SearchSummit Side Event',type:'conf',date:'2026-02-20',location:'Munich, DE',attendees:120,conversions:31,budget:8500,revenue:138000,status:'complete',nps:79},
+  {id:3,name:'Growth Operators Meetup',type:'activation',date:'2026-03-28',location:'Berlin, DE',attendees:65,conversions:18,budget:2100,revenue:62000,status:'complete',nps:91},
+  {id:4,name:'Peec x Attio Community Night',type:'dinner',date:'2026-04-10',location:'Berlin, DE',attendees:44,conversions:14,budget:2800,revenue:55000,status:'complete',nps:84},
+  {id:5,name:'AI Marketing Webinar Series',type:'online',date:'2026-04-22',location:'Remote',attendees:310,conversions:47,budget:800,revenue:89000,status:'complete',nps:76},
+  {id:6,name:'Berlin Tech Week Booth',type:'conf',date:'2026-05-08',location:'Berlin, DE',attendees:0,conversions:0,budget:12000,revenue:0,status:'upcoming',nps:0},
+  {id:7,name:'CMO Roundtable',type:'dinner',date:'2026-05-19',location:'Hamburg, DE',attendees:0,conversions:0,budget:4500,revenue:0,status:'upcoming',nps:0},
+  {id:8,name:'Summer Brand Activation',type:'activation',date:'2026-06-12',location:'Berlin, DE',attendees:0,conversions:0,budget:15000,revenue:0,status:'upcoming',nps:0},
+]
+
+const ambassadors = [
+  {id:1,name:'Nina Haber',role:'Head of Growth, ElevenLabs',tier:'gold',reach:14200,posts:23,conversions:38,joined:'Jan 2026',avatar:'NH',color:'#fef9c3',textColor:'#854d0e'},
+  {id:2,name:'Tobias Renz',role:'Marketing Lead, n8n',tier:'gold',reach:11800,posts:19,conversions:29,joined:'Feb 2026',avatar:'TR',color:'#dbeafe',textColor:'#1e40af'},
+  {id:3,name:'Sophia Müller',role:'Founder, SearchStack',tier:'silver',reach:7400,posts:14,conversions:17,joined:'Feb 2026',avatar:'SM',color:'#fce7f3',textColor:'#9d174d'},
+  {id:4,name:'Jonas Kraft',role:'CMO, Synthesia',tier:'silver',reach:9100,posts:11,conversions:21,joined:'Mar 2026',avatar:'JK',color:'#d1fae5',textColor:'#065f46'},
+  {id:5,name:'Lena Bauer',role:'SEO Director, Attio',tier:'bronze',reach:4300,posts:8,conversions:9,joined:'Apr 2026',avatar:'LB',color:'#ede9fe',textColor:'#5b21b6'},
+  {id:6,name:'Marco Diaz',role:'Growth, Glide',tier:'bronze',reach:3800,posts:6,conversions:7,joined:'Apr 2026',avatar:'MD',color:'#fee2e2',textColor:'#991b1b'},
+]
+
+const feedItems = [
+  {icon:'🎉',bg:'#edf7f2',text:'<strong>Nina Haber</strong> posted about the Founder Dinner — 847 impressions, 23 link clicks',time:'2 min ago'},
+  {icon:'📍',bg:'#eef2fd',text:'<strong>Berlin Tech Week</strong> booth confirmed — 200 sqm corner spot secured',time:'18 min ago'},
+  {icon:'🤝',bg:'#fef3e2',text:'<strong>Tobias Renz</strong> referred 3 new signups from his LinkedIn post',time:'34 min ago'},
+  {icon:'📈',bg:'#edf7f2',text:'AI Marketing Webinar converted <strong>47 attendees</strong> — highest rate this quarter',time:'1 hr ago'},
+  {icon:'✉️',bg:'#eef2fd',text:'CMO Roundtable — <strong>12 of 15 invites confirmed</strong>, 3 pending',time:'2 hr ago'},
+  {icon:'🏆',bg:'#fef9c3',text:'<strong>Jonas Kraft</strong> upgraded to Silver tier after 21st conversion',time:'3 hr ago'},
+  {icon:'📊',bg:'#edf7f2',text:'Q1 community pipeline report exported — <strong>€385K total attributed</strong>',time:'5 hr ago'},
+  {icon:'🎯',bg:'#fdeaea',text:'Growth Operators Meetup NPS: <strong>91</strong> — highest event score on record',time:'Yesterday'},
+]
+
+/* live oscillation */
+let liveKPIs = {
+  totalRevenue: 385000, eventsRun: 5, ambassadors: 6,
+  avgConversion: 28, avgNPS: 83, pipelineQ2: 198000
+}
+
+function jitter(val, pct=0.015) {
+  return Math.round(val * (1 + (Math.random()*pct*2 - pct)))
+}
+
+/* ═══════════════════════════════════════════
+   CLOCK
+═══════════════════════════════════════════ */
+function updateClock(){
+  const d=new Date()
+  document.getElementById('tb-clock').textContent =
+    d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' CET'
+}
+setInterval(updateClock,1000); updateClock()
+
+/* ═══════════════════════════════════════════
+   VIEWS
+═══════════════════════════════════════════ */
+let currentView = 'overview'
+let charts = {}
+
+function setView(view, el) {
+  currentView = view
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'))
+  if(el) el.classList.add('active')
+  const titles = {overview:'Overview',events:'Events',ambassadors:'Ambassadors',pipeline:'Pipeline',health:'Community Health',activity:'Activity Feed'}
+  document.getElementById('page-title').textContent = titles[view]
+  destroyCharts()
+  renderView(view)
+}
+
+function destroyCharts(){
+  Object.values(charts).forEach(c=>{try{c.destroy()}catch(e){}})
+  charts={}
+}
+
+function renderView(v){
+  const el = document.getElementById('content-area')
+  el.className = 'content fade-in'
+  void el.offsetWidth
+  const renders = {overview:renderOverview,events:renderEvents,ambassadors:renderAmbassadors,pipeline:renderPipeline,health:renderHealth,activity:renderActivity}
+  el.innerHTML = (renders[v]||renderOverview)()
+  initCharts(v)
+}
+
+/* ═══════════════════════════════════════════
+   OVERVIEW
+═══════════════════════════════════════════ */
+function renderOverview(){
+  const comp = events.filter(e=>e.status==='complete')
+  const totalAtt = comp.reduce((a,e)=>a+e.attendees,0)
+  const totalConv = comp.reduce((a,e)=>a+e.conversions,0)
+  const totalRev = comp.reduce((a,e)=>a+e.revenue,0)
+  const avgNPS = Math.round(comp.reduce((a,e)=>a+e.nps,0)/comp.length)
+  const convRate = Math.round(totalConv/totalAtt*100)
+
+  return `
+  <div class="kpi-strip">
+    ${kpi('Pipeline Attributed','€'+fmt(totalRev),'↑ +23% vs Q1','up')}
+    ${kpi('Events Run',comp.length,'5 completed · 3 upcoming','flat')}
+    ${kpi('Total Attendees',fmt(totalAtt),'↑ +41% vs Q1','up')}
+    ${kpi('Avg Conversion',convRate+'%','Attendee → User','up')}
+    ${kpi('Community NPS',avgNPS,'↑ +6 pts vs benchmark','up')}
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Pipeline from Community</span><span class="panel-badge badge-green">Live</span></div>
+      <div class="panel-body"><div class="chart-wrap" style="height:200px"><canvas id="chart-pipeline" role="img" aria-label="Monthly community pipeline chart"></canvas></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Attendee → User Conversion by Event Type</span></div>
+      <div class="panel-body"><div class="chart-wrap" style="height:200px"><canvas id="chart-conv" role="img" aria-label="Conversion rate by event type"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Upcoming Events</span><span class="panel-badge badge-amber">3 planned</span></div>
+      <div class="panel-body">${renderUpcoming()}</div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Top Ambassadors</span></div>
+      <div class="panel-body">${renderAmbTop()}</div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Live Activity</span><span class="panel-badge badge-green">Live</span></div>
+      <div class="panel-body" id="feed-panel">${renderFeedItems(4)}</div>
+    </div>
+  </div>`
+}
+
+function kpi(label,val,delta,dir){
+  return `<div class="kpi"><div class="kpi-label">${label}</div><div class="kpi-val" >${val}</div><div class="kpi-delta ${dir}">${delta}</div></div>`
+}
+function fmt(n){return n>=1000?(n/1000).toFixed(0)+'K':n}
+
+function renderUpcoming(){
+  const up = events.filter(e=>e.status==='upcoming').slice(0,3)
+  return `<div class="upcoming-list">${up.map(e=>{
+    const d=new Date(e.date)
+    return `<div class="upcoming-item">
+      <div class="upcoming-date"><div class="upcoming-day">${d.getDate()}</div><div class="upcoming-mon">${MONTHS[d.getMonth()]}</div></div>
+      <div class="upcoming-body"><div class="upcoming-name">${e.name}</div><div class="upcoming-meta">${e.location} · €${fmt(e.budget)} budget</div></div>
+      <div class="upcoming-kpi"><div class="upcoming-target">€${fmt(e.budget*12)}</div><div class="upcoming-tlab">target</div></div>
+    </div>`}).join('')}</div>`
+}
+
+function renderAmbTop(){
+  return `<div class="amb-list">${ambassadors.slice(0,3).map(a=>`
+    <div class="amb-row">
+      <div class="amb-avatar" style="background:${a.color};color:${a.textColor}">${a.avatar}</div>
+      <div><div class="amb-name">${a.name}<span class="tier-badge tier-${a.tier}">${a.tier.toUpperCase()}</span></div><div class="amb-role">${a.role}</div></div>
+      <div class="amb-stat"><div class="amb-reach">${fmt(a.reach)}</div><div class="amb-label">reach</div></div>
+    </div>`).join('')}</div>`
+}
+
+function renderFeedItems(n){
+  return `<div class="feed">${feedItems.slice(0,n).map(f=>`
+    <div class="feed-item">
+      <div class="feed-icon" style="background:${f.bg}">${f.icon}</div>
+      <div class="feed-body"><div class="feed-text">${f.text}</div><div class="feed-time">${f.time}</div></div>
+    </div>`).join('')}</div>`
+}
+
+/* ═══════════════════════════════════════════
+   EVENTS VIEW
+═══════════════════════════════════════════ */
+function renderEvents(){
+  const comp = events.filter(e=>e.status==='complete')
+  const totalRev = comp.reduce((a,e)=>a+e.revenue,0)
+  const totalBudget = events.reduce((a,e)=>a+e.budget,0)
+  const roi = Math.round((totalRev - totalBudget) / totalBudget * 100)
+
+  return `
+  <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr)">
+    ${kpi('Total Events',events.length,'5 complete · 3 upcoming','flat')}
+    ${kpi('Revenue Attributed','€'+fmt(totalRev),'from completed events','up')}
+    ${kpi('Total Budget','€'+fmt(totalBudget),'all events combined','flat')}
+    ${kpi('Blended ROI',roi+'%','revenue ÷ spend','up')}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">All Events</span><button class="add-btn" onclick="openModal()" style="font-size:.76rem;padding:.35rem .75rem">+ Log Event</button></div>
+    <div style="overflow-x:auto">
+      <table class="evt-table" id="evt-table-body">
+        <thead><tr>
+          <th>Event</th><th>Type</th><th>Date</th><th>Location</th>
+          <th>Attendees</th><th>Conversion</th><th>Revenue</th><th>NPS</th><th>Status</th>
+        </tr></thead>
+        <tbody>${renderEventRows()}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Revenue per Event</span></div>
+      <div class="panel-body"><div class="chart-wrap" style="height:220px"><canvas id="chart-rev-event" role="img" aria-label="Revenue per event bar chart"></canvas></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">NPS by Event</span></div>
+      <div class="panel-body"><div class="chart-wrap" style="height:220px"><canvas id="chart-nps" role="img" aria-label="NPS scores by event"></canvas></div></div>
+    </div>
+  </div>`
+}
+
+function renderEventRows(){
+  const typeMap={dinner:'tag-dinner',conf:'tag-conf',activation:'tag-activation',online:'tag-online'}
+  const typeLbl={dinner:'Dinner',conf:'Conference',activation:'Activation',online:'Online'}
+  return events.map(e=>{
+    const rate = e.attendees>0?Math.round(e.conversions/e.attendees*100):'-'
+    const statusColor = e.status==='complete'?'#1a7f5a':'#b85c00'
+    return `<tr>
+      <td style="font-weight:600;color:var(--ink)">${e.name}</td>
+      <td><span class="evt-type ${typeMap[e.type]}">${typeLbl[e.type]}</span></td>
+      <td style="font-family:var(--mono);font-size:11px">${e.date}</td>
+      <td>${e.location}</td>
+      <td style="font-family:var(--mono)">${e.attendees||'—'}</td>
+      <td>${e.attendees>0?`<span class="conv-bar-wrap"><span class="conv-bar" style="width:${Math.min(rate,100)}%"></span></span>${rate}%`:'—'}</td>
+      <td style="font-family:var(--mono);color:var(--green)">${e.revenue?'€'+fmt(e.revenue):'—'}</td>
+      <td style="font-family:var(--mono)">${e.nps||'—'}</td>
+      <td><span class="status-dot" style="background:${statusColor}"></span>${e.status}</td>
+    </tr>`
+  }).join('')
+}
+
+/* ═══════════════════════════════════════════
+   AMBASSADORS VIEW
+═══════════════════════════════════════════ */
+function renderAmbassadors(){
+  const totalReach = ambassadors.reduce((a,b)=>a+b.reach,0)
+  const totalConv = ambassadors.reduce((a,b)=>a+b.conversions,0)
+  const totalPosts = ambassadors.reduce((a,b)=>a+b.posts,0)
+  return `
+  <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr)">
+    ${kpi('Active Ambassadors',ambassadors.length,'2 Gold · 2 Silver · 2 Bronze','flat')}
+    ${kpi('Total Reach',fmt(totalReach)+'K','combined audience','up')}
+    ${kpi('Conversions via Amb.',totalConv,'↑ +34% this quarter','up')}
+    ${kpi('Content Published',totalPosts,'posts, threads & talks','up')}
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Ambassador Roster</span><span class="panel-badge badge-blue">6 Active</span></div>
+      <div class="panel-body"><div class="amb-list">${ambassadors.map(a=>`
+        <div class="amb-row">
+          <div class="amb-avatar" style="background:${a.color};color:${a.textColor}">${a.avatar}</div>
+          <div style="flex:1">
+            <div class="amb-name">${a.name}<span class="tier-badge tier-${a.tier}">${a.tier.toUpperCase()}</span></div>
+            <div class="amb-role">${a.role} · joined ${a.joined}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:var(--mono);font-size:.78rem;color:var(--green)">${a.conversions} conv.</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--ink3)">${fmt(a.reach)} reach</div>
+          </div>
+        </div>`).join('')}</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Ambassador Performance</span></div>
+      <div class="panel-body"><div class="chart-wrap" style="height:280px"><canvas id="chart-amb" role="img" aria-label="Ambassador conversions chart"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">Tier Breakdown</span></div>
+    <div class="panel-body">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem">
+        ${tierCard('Gold','2 ambassadors','26,000 combined reach','67 conversions','#fef9c3','#a16207')}
+        ${tierCard('Silver','2 ambassadors','16,500 combined reach','38 conversions','#f1f5f9','#475569')}
+        ${tierCard('Bronze','2 ambassadors','8,100 combined reach','16 conversions','#fef3e2','#92400e')}
+      </div>
+    </div>
+  </div>`
+}
+
+function tierCard(tier,count,reach,conv,bg,color){
+  return `<div style="background:${bg};border-radius:8px;padding:1.1rem">
+    <div style="font-family:var(--mono);font-size:10px;color:${color};letter-spacing:.1em;margin-bottom:.5rem">${tier.toUpperCase()} TIER</div>
+    <div style="font-family:var(--serif);font-size:1.4rem;font-weight:500;color:var(--ink)">${count}</div>
+    <div style="font-size:.75rem;color:var(--ink2);margin-top:.3rem">${reach}</div>
+    <div style="font-family:var(--mono);font-size:.75rem;color:${color};margin-top:.2rem">${conv}</div>
+  </div>`
+}
+
+/* ═══════════════════════════════════════════
+   PIPELINE VIEW
+═══════════════════════════════════════════ */
+function renderPipeline(){
+  return `
+  <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr)">
+    ${kpi('Q2 Pipeline','€198K','3 events planned','flat')}
+    ${kpi('Q1 Attributed','€385K','↑ +23% vs Q4 2025','up')}
+    ${kpi('Avg Deal Size','€27.5K','from community source','up')}
+    ${kpi('CAC via Community','€1,240','vs €3,800 paid avg','up')}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">Community Funnel</span><span class="panel-badge badge-blue">Q1 2026</span></div>
+    <div class="panel-body">
+      <div class="funnel">
+        ${funnelRow('Event Attendees','577 people','#2d5be3',100)}
+        ${funnelRow('Engaged Post-Event','312 people','#1a7f5a',54)}
+        ${funnelRow('Trial Signups','141 people','#b85c00',24)}
+        ${funnelRow('Qualified Leads','78 people','#1a4f9f',14)}
+        ${funnelRow('Closed Deals','14 accounts','#5b21b6',9)}
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Pipeline by Event Type</span></div>
+      <div class="panel-body"><div class="chart-wrap" style="height:220px"><canvas id="chart-pipe-type" role="img" aria-label="Pipeline by event type doughnut chart"></canvas></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Monthly Pipeline Trend</span></div>
+      <div class="panel-body"><div class="chart-wrap" style="height:220px"><canvas id="chart-pipe-trend" role="img" aria-label="Monthly pipeline trend line chart"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">ROI by Event Type</span></div>
+    <div class="panel-body">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem">
+        ${roiCard('Partner Dinner','12.8x','€3,200 avg spend','€41K avg return','#edf7f2','#1a7f5a')}
+        ${roiCard('Conference','16.2x','€8,500 avg spend','€138K avg return','#eef2fd','#1a4f9f')}
+        ${roiCard('Brand Activation','29.5x','€2,100 avg spend','€62K avg return','#fef3e2','#b85c00')}
+        ${roiCard('Online Event','111x','€800 avg spend','€89K avg return','#ede9fe','#5b21b6')}
+      </div>
+    </div>
+  </div>`
+}
+
+function funnelRow(label,val,color,pct){
+  return `<div class="funnel-row">
+    <span class="funnel-label">${label}</span>
+    <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${color}">${pct===100?'':''}</div></div>
+    <span class="funnel-val" style="font-family:var(--mono);font-size:.76rem">${val}</span>
+  </div>`
+}
+
+function roiCard(type,roi,spend,ret,bg,color){
+  return `<div style="background:${bg};border-radius:8px;padding:1rem">
+    <div style="font-size:.75rem;font-weight:600;color:var(--ink);margin-bottom:.4rem">${type}</div>
+    <div style="font-family:var(--serif);font-size:2rem;font-weight:500;color:${color}">${roi}</div>
+    <div style="font-size:.72rem;color:var(--ink3);margin-top:.3rem">${spend}</div>
+    <div style="font-size:.72rem;color:${color};font-family:var(--mono)">${ret}</div>
+  </div>`
+}
+
+/* ═══════════════════════════════════════════
+   HEALTH VIEW
+═══════════════════════════════════════════ */
+function renderHealth(){
+  return `
+  <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr)">
+    ${kpi('Health Score','84/100','↑ +7 vs last month','up')}
+    ${kpi('30-Day Retention','71%','of event attendees','up')}
+    ${kpi('Avg NPS','83','across all events','up')}
+    ${kpi('Member Growth','+34%','quarter on quarter','up')}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">Community Health Dimensions</span></div>
+    <div class="panel-body">
+      <div class="health-grid">
+        ${ring('Engagement','78','#2d5be3')}
+        ${ring('Retention','71','#1a7f5a')}
+        ${ring('Advocacy','89','#b85c00')}
+        ${ring('Growth','82','#5b21b6')}
+        ${ring('NPS','83','#1a4f9f')}
+        ${ring('Content Quality','76','#b83232')}
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Health Score Over Time</span></div>
+      <div class="panel-body"><div class="chart-wrap" style="height:200px"><canvas id="chart-health" role="img" aria-label="Community health score over time"></canvas></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">NPS Trend by Event</span></div>
+      <div class="panel-body"><div class="chart-wrap" style="height:200px"><canvas id="chart-nps-trend" role="img" aria-label="NPS trend by event line chart"></canvas></div></div>
+    </div>
+  </div>`
+}
+
+function ring(label,val,color){
+  const r=40,circ=2*Math.PI*r,fill=circ*(val/100)
+  return `<div class="health-item">
+    <svg class="ring-svg" width="100" height="100" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="#e4e0d8" stroke-width="7"/>
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="7"
+        stroke-dasharray="${fill} ${circ}" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+      <text x="50" y="46" text-anchor="middle" font-size="18" font-weight="600"
+        fill="${color}" font-family="Fraunces,serif">${val}</text>
+      <text x="50" y="59" text-anchor="middle" font-size="8" fill="#8a877f" font-family="DM Mono,monospace">/100</text>
+    </svg>
+    <div class="health-label">${label}</div>
+  </div>`
+}
+
+/* ═══════════════════════════════════════════
+   ACTIVITY VIEW
+═══════════════════════════════════════════ */
+function renderActivity(){
+  return `
+  <div class="panel" style="max-width:680px">
+    <div class="panel-head"><span class="panel-title">Community Activity Feed</span><span class="panel-badge badge-green">Live</span></div>
+    <div class="panel-body" id="full-feed">${renderFeedItems(feedItems.length)}</div>
+  </div>`
+}
+
+/* ═══════════════════════════════════════════
+   CHARTS
+═══════════════════════════════════════════ */
+const CHART_COLORS = ['#2d5be3','#1a7f5a','#b85c00','#5b21b6','#b83232','#1a4f9f']
+
+function initCharts(view){
+  if(view==='overview'){
+    charts.pipeline = new Chart(document.getElementById('chart-pipeline'),{
+      type:'bar',
+      data:{labels:['Jan','Feb','Mar','Apr','May','Jun'],
+        datasets:[{label:'Pipeline (€K)',data:[42,68,95,115,0,0],backgroundColor:'#2d5be3',borderRadius:4},
+                  {label:'Target',data:[60,70,80,90,100,110],type:'line',borderColor:'#b85c00',borderDash:[4,3],pointRadius:0,backgroundColor:'transparent'}]},
+      options:chartOpts('€',true)
+    })
+    charts.conv = new Chart(document.getElementById('chart-conv'),{
+      type:'bar',
+      data:{labels:['Dinner','Conference','Activation','Online'],
+        datasets:[{label:'Conversion %',data:[34,26,28,15],backgroundColor:CHART_COLORS,borderRadius:4}]},
+      options:chartOpts('%',false)
+    })
+  }
+  if(view==='events'){
+    const comp = events.filter(e=>e.status==='complete')
+    charts.revEvent = new Chart(document.getElementById('chart-rev-event'),{
+      type:'bar',
+      data:{labels:comp.map(e=>e.name.length>18?e.name.slice(0,18)+'…':e.name),
+        datasets:[{label:'Revenue €',data:comp.map(e=>e.revenue),backgroundColor:CHART_COLORS,borderRadius:4}]},
+      options:chartOpts('€',false)
+    })
+    charts.nps = new Chart(document.getElementById('chart-nps'),{
+      type:'line',
+      data:{labels:comp.map(e=>e.name.length>12?e.name.slice(0,12)+'…':e.name),
+        datasets:[{label:'NPS',data:comp.map(e=>e.nps),borderColor:'#2d5be3',backgroundColor:'rgba(45,91,227,.08)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#2d5be3'}]},
+      options:{...chartOpts('',false),scales:{y:{min:60,max:100,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#8a877f',font:{size:10}},border:{display:false}},x:{grid:{display:false},ticks:{color:'#8a877f',font:{size:10}}}}}
+    })
+  }
+  if(view==='ambassadors'){
+    charts.amb = new Chart(document.getElementById('chart-amb'),{
+      type:'bar',
+      data:{labels:ambassadors.map(a=>a.name.split(' ')[0]),
+        datasets:[
+          {label:'Conversions',data:ambassadors.map(a=>a.conversions),backgroundColor:'#2d5be3',borderRadius:4},
+          {label:'Posts',data:ambassadors.map(a=>a.posts),backgroundColor:'#e4e0d8',borderRadius:4}
+        ]},
+      options:chartOpts('',true)
+    })
+  }
+  if(view==='pipeline'){
+    charts.pipeType = new Chart(document.getElementById('chart-pipe-type'),{
+      type:'doughnut',
+      data:{labels:['Dinner','Conference','Activation','Online'],
+        datasets:[{data:[41,138,62,89],backgroundColor:CHART_COLORS,borderWidth:0,hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11,family:'DM Mono'},boxWidth:10,padding:14,color:'#3d3b36'}}}}
+    })
+    charts.pipeTrend = new Chart(document.getElementById('chart-pipe-trend'),{
+      type:'line',
+      data:{labels:['Jan','Feb','Mar','Apr'],
+        datasets:[{label:'Pipeline €K',data:[42,110,168,320],borderColor:'#2d5be3',backgroundColor:'rgba(45,91,227,.07)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#2d5be3'}]},
+      options:chartOpts('€K',false)
+    })
+  }
+  if(view==='health'){
+    charts.health = new Chart(document.getElementById('chart-health'),{
+      type:'line',
+      data:{labels:['Nov','Dec','Jan','Feb','Mar','Apr'],
+        datasets:[{label:'Health Score',data:[65,68,72,76,81,84],borderColor:'#1a7f5a',backgroundColor:'rgba(26,127,90,.07)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#1a7f5a'}]},
+      options:{...chartOpts('',false),scales:{y:{min:50,max:100,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#8a877f',font:{size:10}},border:{display:false}},x:{grid:{display:false},ticks:{color:'#8a877f',font:{size:10}}}}}
+    })
+    charts.npsTrend = new Chart(document.getElementById('chart-nps-trend'),{
+      type:'line',
+      data:{labels:['Event 1','Event 2','Event 3','Event 4','Event 5'],
+        datasets:[{label:'NPS',data:[87,79,91,84,76],borderColor:'#b85c00',backgroundColor:'rgba(184,92,0,.07)',fill:true,tension:.4,pointRadius:5,pointBackgroundColor:'#b85c00'}]},
+      options:{...chartOpts('',false),scales:{y:{min:60,max:100,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#8a877f',font:{size:10}},border:{display:false}},x:{grid:{display:false},ticks:{color:'#8a877f',font:{size:10}}}}}
+    })
+  }
+}
+
+function chartOpts(unit,legend){
+  return{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:legend,labels:{font:{size:11,family:'DM Mono'},boxWidth:10,color:'#3d3b36',padding:14}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${unit}${ctx.parsed.y??ctx.parsed}`}}},
+    scales:{y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#8a877f',font:{size:10},callback:v=>`${unit}${v}`},border:{display:false}},x:{grid:{display:false},ticks:{color:'#8a877f',font:{size:10}}}}
+  }
+}
+
+/* ═══════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════ */
+function openModal(){document.getElementById('modal').classList.add('open')}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal()})
+
+function saveEvent(){
+  const name=document.getElementById('m-name').value.trim()
+  if(!name)return
+  const type=document.getElementById('m-type').value
+  const att=parseInt(document.getElementById('m-att').value)||0
+  const loc=document.getElementById('m-loc').value||'TBD'
+  const budget=parseInt(document.getElementById('m-budget').value)||0
+  const d=new Date(); d.setMonth(d.getMonth()+1)
+  const dateStr=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+  events.push({id:events.length+1,name,type,date:dateStr,location:loc,attendees:att,conversions:0,budget,revenue:0,status:'upcoming',nps:0})
+  feedItems.unshift({icon:'📅',bg:'#eef2fd',text:`<strong>${name}</strong> added — ${att} attendees planned in ${loc}`,time:'Just now'})
+  closeModal()
+  ;['m-name','m-att','m-loc','m-budget'].forEach(id=>document.getElementById(id).value='')
+  if(currentView==='events'||currentView==='overview') renderView(currentView)
+}
+
+/* ═══════════════════════════════════════════
+   LIVE UPDATES
+═══════════════════════════════════════════ */
+// rotate feed
+setInterval(()=>{
+  if(currentView==='activity'){
+    const fp=document.getElementById('full-feed')
+    if(fp) fp.innerHTML=renderFeedItems(feedItems.length)
+  }
+  if(currentView==='overview'){
+    const fp=document.getElementById('feed-panel')
+    if(fp) fp.innerHTML=renderFeedItems(4)
+  }
+},8000)
+
+// update pipeline chart live
+setInterval(()=>{
+  if(currentView==='overview'&&charts.pipeline){
+    const d=charts.pipeline.data.datasets[0].data
+    const updated=d.map((v,i)=>i<4?Math.round(v*(1+(Math.random()*.02-.01))):v)
+    charts.pipeline.data.datasets[0].data=updated
+    charts.pipeline.update('none')
+  }
+},5000)
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+renderView('overview')
+</script>
+</body>
+</html>
